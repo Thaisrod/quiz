@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Badminton</title>
+    <style>
+        /* Reset de estilos padrão */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Estilos do corpo e da página */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            color: #050505;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Estilos do container principal do quiz */
+        .quiz-container {
+            background-color: rgba(148, 208, 231, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgb(130, 215, 218);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .quiz-container:hover {
+            transform: scale(1.05);
+        }
+
+        /* Estilos do título */
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: #2980b9;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Estilos do cronômetro */
+        #timer {
+            font-size: 1.5rem;
+            color: #fc2424;
+            margin-bottom: 10px;
+        }
+
+        /* Estilos das perguntas e opções */
+        .question-container {
+            margin-bottom: 20px;
+        }
+
+        #options {
+            list-style-type: none;
+        }
+
+        .option {
+            background-color: #3498db;
+            color: #fffbfb;
+            border: none;
+            padding: 15px 25px;
+            margin: 15px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.3s ease-in-out;
+        }
+
+        .option:hover {
+            background-color: #2980b9;
+            transform: translateY(-3px);
+        }
+
+        .correct {
+            background-color: #2ecc71 !important;
+        }
+
+        .incorrect {
+            background-color: #fffaf9 !important;
+        }
+
+        /* Estilos do resultado */
+        .result-container {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+        }
+
+        #score {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #2ecc71;
+            color: rgb(241, 241, 241);
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background-color: #27ae60;
+            transform: translateY(-3px);
+        }
+
+        /* Animação de transição entre perguntas */
+        .fade {
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .fade-in {
+            opacity: 1;
+        }
+
+        /* Responsividade */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .option {
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+
+            button {
+                font-size: 1rem;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <h1>Quiz de Badminton</h1>
+        <div id="quiz">
+            <p id="timer">Tempo restante: <span id="time-left">30</span> segundos</p>
+            <div class="question-container">
+                <p id="question-text">Qual é o objetivo principal do badminton?</p>
+                <ul id="options">
+                    <li><button class="option" onclick="checkAnswer(0)">Acertar a peteca no chão do adversário</button></li>
+                    <li><button class="option" onclick="checkAnswer(1)">Fazer o adversário errar a batida</button></li>
+                    <li><button class="option" onclick="checkAnswer(2)">Marcar mais pontos que o adversário</button></li>
+                    <li><button class="option" onclick="checkAnswer(3)">Fazer o adversário se cansar</button></li>
+                </ul>
+            </div>
+        </div>
+
+        <div id="result" class="result-container" style="display: none;">
+            <h2>Resultado</h2>
+            <p id="score">Você acertou <span id="score-value">0</span> de 10 questões.</p>
+            <button onclick="restartQuiz()">Tentar novamente</button>
+        </div>
+    </div>
+
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let timeLeft = 50; // Tempo para cada pergunta em segundos
+        let timer;
+        const questions = [
+            {
+                question: "Qual é o objetivo principal do badminton?",
+                options: [
+                    "Acertar a peteca no chão do adversário",
+                    "Fazer o adversário errar a batida",
+                    "Marcar mais pontos que o adversário",
+                    "Fazer o adversário se cansar"
+                ],
+                correctAnswer: 0
+            },
+            {
+                question: "Qual é o nome da raquete usada no badminton?",
+                options: [
+                    "Raquete de tênis",
+                    "Raquete de squash",
+                    "Raquete de badminton",
+                    "Raquete de ping-pong"
+                ],
+                correctAnswer: 2
+            },
+            {
+                question: "Qual é o nome do campeão mundial de badminton mais famoso da história?",
+                options: [
+                    "Lin Dan",
+                    "Novak Djokovic",
+                    "Roger Federer",
+                    "Kento Momota"
+                ],
+                correctAnswer: 0
+            },
+            {
+                question: "Em um jogo de badminton, quantos pontos um jogador precisa para vencer um set?",
+                options: [
+                    "15 pontos",
+                    "21 pontos",
+                    "11 pontos",
+                    "25 pontos"
+                ],
+                correctAnswer: 1
+            },
+            {
+                question: "Como é chamada a 'bola' usada no badminton?",
+                options: [
+                    "Shuttlecock",
+                    "Cestinha",
+                    "Peteca",
+                    "Bola de badminton"
+                ],
+                correctAnswer: 0
+            },
+            {
+                question: "Quantos jogadores são necessários para jogar uma partida de badminton?",
+                options: [
+                    "1",
+                    "2",
+                    "3",
+                    "4"
+                ],
+                correctAnswer: 1
+            },
+            {
+                question: "Qual é a altura da rede de badminton para os homens?",
+                options: [
+                    "1,55 metros",
+                    "1,65 metros",
+                    "1,45 metros",
+                    "1,75 metros"
+                ],
+                correctAnswer: 0
+            },
+            {
+                question: "Quem foi o primeiro jogador a ganhar 5 títulos no Campeonato Mundial de Badminton?",
+                options: [
+                    "Lin Dan",
+                    "Peter Gade",
+                    "Lee Chong Wei",
+                    "Taufik Hidayat"
+                ],
+                correctAnswer: 2
+            },
+            {
+                question: "Qual é a principal diferença entre o badminton e o tênis?",
+                options: [
+                    "O uso de raquete",
+                    "O tipo de bola",
+                    "A altura da rede",
+                    "O uso da peteca"
+                ],
+                correctAnswer: 3
+            },
+            {
+                question: "Em que ano o badminton foi introduzido nos Jogos Olímpicos?",
+                options: [
+                    "1992",
+                    "1988",
+                    "2000",
+                    "1984"
+                ],
+                correctAnswer: 0
+            }
+        ];
+
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('time-left').textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAnswer(-1); // Chama a função quando o tempo acaba
+                }
+            }, 1000);
+        }
+
+        function loadQuestion() {
+            if (currentQuestion < questions.length) {
+                const question = questions[currentQuestion];
+                document.getElementById('question-text').textContent = question.question;
+                const options = document.getElementById('options');
+                options.innerHTML = '';
+                question.options.forEach((option, index) => {
+                    const optionButton = document.createElement('button');
+                    optionButton.classList.add('option');
+                    optionButton.textContent = option;
+                    optionButton.onclick = () => checkAnswer(index);
+                    options.appendChild(optionButton);
+                });
+                timeLeft = 30; // Reseta o tempo a cada nova pergunta
+                startTimer();
+            } else {
+                showResult();
+            }
+        }
+
+        function checkAnswer(selectedIndex) {
+            const question = questions[currentQuestion];
+            const options = document.getElementById('options').children;
+            clearInterval(timer); // Para o cronômetro
+
+            if (selectedIndex === question.correctAnswer) {
+                score++;
+                options[selectedIndex].classList.add('correct');
+            } else {
+                if (selectedIndex !== -1) {
+                    options[selectedIndex].classList.add('incorrect');
+                }
+                options[question.correctAnswer].classList.add('correct');
+            }
+
+            currentQuestion++;
+            setTimeout(() => {
+                loadQuestion();
+            }, 1000); // Aguarda 1 segundo antes de carregar a próxima pergunta
+        }
+
+        function showResult() {
+            document.getElementById('quiz').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('score-value').textContent = score;
+        }
+
+        function restartQuiz() {
+            score = 0;
+            currentQuestion = 0;
+            document.getElementById('quiz').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            loadQuestion();
+        }
+
+        // Iniciar o quiz
+        loadQuestion();
+    </script>
+
+</body>
+</html>
